@@ -123,6 +123,7 @@ namespace ReactiveSets
             foreach(var kvp in _content)
             {
                 var delta = Delta<TId, TPayload>.SetItem(kvp.Key, kvp.Value);
+                observer.OnNext(delta);
             }
 
             observer.OnNext(Delta<TId, TPayload>.EndBulkUpdate);
