@@ -7,7 +7,7 @@ namespace ReactiveSets
     {
         protected readonly Set<TIdOut, TPayloadOut> _content;
 
-        protected SetToSet(ISet<TIdIn, TPayloadIn> source)
+        protected SetToSet(IObservable<Delta<TIdIn, TPayloadIn>> source)
         {
             _content = new Set<TIdOut, TPayloadOut>(() => source.Subscribe(this));
         }

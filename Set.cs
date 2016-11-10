@@ -39,6 +39,11 @@ namespace ReactiveSets
             get{ return _content[id]; }
         }
 
+        public bool Contains(TId id)
+        {
+            return _content.ContainsKey(id);
+        }
+
         public void SetItem(TId id, TPayload payload)
         {
             _content[id] = payload;

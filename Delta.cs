@@ -1,3 +1,5 @@
+using System;
+
 namespace ReactiveSets
 {
     public struct Delta<TId, TPayload>
@@ -18,5 +20,21 @@ namespace ReactiveSets
             Id = id;
             Payload = payload;
         }
+
+        public override string ToString()
+        {
+            switch(Type)
+            {
+                case DeltaType.BeginBulkUpdate:
+                case DeltaType.EndBulkUpdate:
+                case DeltaType.Clear:
+                    return Type.ToString();
+                case DeltaType.SetItem:
+                    return string.Format("Set {0} to {1}", Id, Payload);
+                case DeltaType.DeleteItem:
+                    return string.Format("Delete {0}", Id);
+                default: throw new NotImplementedException();
+            }
+        } 
     }
 }

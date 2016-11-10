@@ -8,7 +8,7 @@ namespace ReactiveSets
         private readonly Func<TIdIn, TPayloadIn, TPayloadOut> _payloadMapping;
         private readonly bool _disposeOnDelete;
 
-        public Mapper(ISet<TIdIn, TPayloadIn> source, Func<TIdIn, TIdOut> idMapping, Func<TIdIn, TPayloadIn, TPayloadOut> payloadMapping, bool disposeOnDelete)
+        public Mapper(IObservable<Delta<TIdIn, TPayloadIn>> source, Func<TIdIn, TIdOut> idMapping, Func<TIdIn, TPayloadIn, TPayloadOut> payloadMapping, bool disposeOnDelete)
             : base(source)
         {
             _idMapping = idMapping;
