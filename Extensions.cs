@@ -1,19 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ReactiveSets
 {
     internal static class Extensions
     {
-        public static void Test()
+        public static void SetItem<TId>(this Set<TId, TId> set, TId item)
         {
-            var source = new Set<string, int>();
-
-            source
-                .Select(n => n+1)
-                .Where(n => n % 3 == 0)
-                .Aggregate(ns => ns.Sum());
+            set.SetItem(item, item);
         }
 
         public static ISet<TIdOut, TPayloadOut> Select<TIdIn, TPayloadIn, TIdOut, TPayloadOut>(
@@ -56,9 +50,17 @@ namespace ReactiveSets
 
         public static ISet<TId, TPayload> Where<TId, TPayload>(
             this IObservable<Delta<TId, TPayload>> source,
-            Func<TPayload, bool> condition)
+            Predicate<TPayload> condition)
         {
             return new Subsetter<TId, TPayload>(source, (id, payload) => condition(payload));
+        }
+
+        public static ISet<TId, TPayload> WhereDynamic<TId, TPayload, TDynamic>(
+            this IObservable<Delta<TId, TPayload>> source,
+            Func<TPayload, IObservable<TDynamic>> payloadToObservable,
+            Predicate<TDynamic> condition)
+        {
+            return new DynamicSubsetter<TId, TPayload, TDynamic>(source, payloadToObservable, condition);
         }
 
         public static IObservable<TPayloadOut> Aggregate<TIdIn, TPayloadIn, TPayloadOut>(
@@ -66,7 +68,7 @@ namespace ReactiveSets
             Func<IEnumerable<TPayloadIn>, TPayloadOut> aggregate)
         {
             return new Aggregator<TIdIn, TPayloadIn, TPayloadOut>(source, aggregate);
-        }
+        }        
 
         public static TValue FindOrAdd<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, Func<TValue> valueFactory)
         {
@@ -78,6 +80,14 @@ namespace ReactiveSets
             }
 
             return val;
+        }
+
+        public static void DisposeAll(this IEnumerable<IDisposable> disposables)
+        {
+            if(disposables == null) return;
+
+            foreach(var disposable in disposables)
+                disposable?.Dispose();
         }
     }
 }

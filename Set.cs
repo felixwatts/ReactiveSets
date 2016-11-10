@@ -5,6 +5,8 @@ using System.Reactive.Subjects;
 
 namespace ReactiveSets
 {   
+    public class Set<TId> : Set<TId, TId>{}
+
     public class Set<TId, TPayload> : ISet<TId, TPayload>, IObserver<Delta<TId, TPayload>>
     {
         private readonly ISubject<Delta<TId, TPayload>> _subscribers;
