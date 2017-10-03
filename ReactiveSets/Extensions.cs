@@ -1,13 +1,35 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ReactiveSets
 {
-    internal static class Extensions
+    public static class Extensions
     {
+        public static IValue<T> ToValue<T>(this IObservable<T> source, T initialValue = default(T))
+        {
+            return new ValueFromObservable<T>(source, initialValue);
+        }
+
         public static void SetItem<TId>(this Set<TId, TId> set, TId item)
         {
             set.SetItem(item, item);
+        }
+
+        public static void Snapshot<TId, TPayload>(this ISet<TId, TPayload> source, Action<IReadOnlyDictionary<TId, TPayload>> handleResult)
+        {
+            new Snapshotter<TId, TPayload>(source, handleResult);
+        }
+
+        public static Task<IReadOnlyDictionary<TId, TPayload>> SnapshotAsync<TId, TPayload>(this ISet<TId, TPayload> source)
+        {
+            return Task.Run(() =>
+            {
+                var t = new TaskCompletionSource<IReadOnlyDictionary<TId, TPayload>>();
+                source.Snapshot(ss => t.TrySetResult(ss));
+                return t.Task;
+            });
         }
 
         public static ISet<TIdOut, TPayloadOut> Select<TIdIn, TPayloadIn, TIdOut, TPayloadOut>(

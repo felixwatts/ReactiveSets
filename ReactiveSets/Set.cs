@@ -23,7 +23,7 @@ namespace ReactiveSets
             }
             else
             {
-                subscribeToSource = () =>
+                Func<IDisposable> subscribeToSourceAndResetOnUnsubscribe = () =>
                 {
                     var sub = subscribeToSource();
                     return Disposable.Create(() =>
@@ -34,7 +34,7 @@ namespace ReactiveSets
                     });
                 };
 
-                _subscribers = new ReferenceCountingSubject<Delta<TId, TPayload>>(subscribeToSource);
+                _subscribers = new ReferenceCountingSubject<Delta<TId, TPayload>>(subscribeToSourceAndResetOnUnsubscribe);
             }
         }
 

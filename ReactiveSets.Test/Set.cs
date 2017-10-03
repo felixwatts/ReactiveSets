@@ -61,6 +61,29 @@ namespace ReactiveSets.Test
             ThenTheSubscriberReceives(DeltaType.EndBulkUpdate, 1);
         } 
 
+        [Test]
+        public void SubscribeCycle()
+        {
+            GivenANewSet();
+            GivenASubscriber();
+            GivenAnItemIsSet("A", 1);
+            GivenSubscriberUnsubscribes();
+
+            WhenASubscriberSubscribes();
+
+            ThenTheIdsPropertyContains("A");
+            ThenThePayloadsPropertyContains(1);  
+            ThenTheSubscriberReceivesNumMessages(3);
+            ThenTheSubscriberReceives(DeltaType.BeginBulkUpdate, 1);
+            ThenTheSubscriberReceives(DeltaType.SetItem, "A", 1, 1);
+            ThenTheSubscriberReceives(DeltaType.EndBulkUpdate, 1);
+        }
+
+        private void GivenSubscriberUnsubscribes()
+        {
+            _subscription.Dispose();
+        }
+
         private void ThenTheIdsPropertyContains(string id)
         {
             Assert.IsTrue(_subject.Ids.Contains(id));
@@ -71,6 +94,11 @@ namespace ReactiveSets.Test
             Assert.IsTrue(_subject.Payloads.Contains(val));
         }
 
+        private void GivenAnItemIsSet(string key, int val)
+        {
+            _subject.SetItem(key, val);
+        }
+
         private void WhenAnItemIsSet(string key, int val)
         {
             _subject.SetItem(key, val);
@@ -79,6 +107,11 @@ namespace ReactiveSets.Test
         private void GivenANewSet()
         {
             _subject = new ReactiveSets.Set<string, int>();
+        }
+
+        private void WhenASubscriberSubscribes()
+        {
+            GivenASubscriber();
         }
 
         private void GivenASubscriber()

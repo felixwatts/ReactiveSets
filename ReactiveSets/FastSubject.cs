@@ -29,7 +29,7 @@ namespace ReactiveSets
             }
         }
 
-        public void OnNext(T value)
+        public virtual void OnNext(T value)
         {
             foreach(var s in GetSubscribers())
             {
