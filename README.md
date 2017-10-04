@@ -1,6 +1,6 @@
 # Introduction
 
-Reactive Sets provides a declarative way to describe relationships between objects and have those relationships automatically maintained over time. 
+Reactive Sets provides a declarative way to describe relationships between sets and have those relationships automatically maintained over time. 
 
 Whereas LINQ allows you to describe a transformation of a collection and perform that transformation once and Rx allows you to describe a transformation on a single value and have that transformation re-applied every time the value changes, Reactive Sets combines both these powers. You use a LINQ like syntax to describe a transformation of a collection and ReactiveSets ensures that the transformation is re-applied as the contents of the source collection change over time.
 
