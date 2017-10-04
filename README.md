@@ -9,46 +9,34 @@ Practically speaking, Reactive Sets is mostly a set of extension methods on the 
 Here is a small example:
 
 ```csharp
+// a set mapping stock ticker to current price
+var stockPrices = new Set<string, double>();
+// a set mapping stock ticker to number of stocks owned
+var positions = new Set<string, int>();
 
-public class Stock
-{
-    public string Name { get; }
-    public IValue<double> Price { get; }
+positions                
+    // join the two sets by stock ticker (the Id), multiplying the values
+    // to give us a set of stock ticker to current value of the owned stocks
+    .Join(stockPrices, (position, price) => position * price)
+    // sum value over all stocks owned
+    .Aggregate(vs => vs.Sum())
+    // print the total value to the console each time it changes
+    .Subscribe(Console.WriteLine);
 
-    public Stock(string name)
-    {
-        Name = name;
+// changes to stock prices and stocks owned
+// automatically update the total value
+stockPrices.SetItem("GOOG", 500);
+positions.SetItem("GOOG", 10);
+stockPrices.SetItem("AAPL", 1000);
+positions.SetItem("AAPL", 10);
+stockPrices.SetItem("AAPL", 1001);
+positions.DeleteItem("AAPL");
 
-        // stock price does a random walk starting at 100
-        Price = Observable
-            .Interval(TimeSpan.FromSeconds(1))  
-            .Scan(100d, (current, _) => current + _random.NextDouble() - 0.5d)              
-            .ToValue();
-    }
-
-    private static Random _random = new Random();
-}
-
-
-private static void Example1()
-{
-    var source = new Set<string>();                             // a set of stock names that can change over time
-
-    source
-        .Select(n => new Stock(n))                              // map from stock names to stock objects
-        .WhereDynamic(s => s.Price, p => p > 100.1)             // filter for stocks who's price has moved a lot
-        .Select(s => $"{s.Name}:{s.Price.Current}")             // map each stock to a string of its name and current value
-        .Aggregate(ns => string.Join(",", ns.OrderBy(n => n)))  // reduce the collection to a single string of stock names
-        .Subscribe(str =>                                       // print the result each time it changes
-        {
-            Console.Clear();
-            Console.SetCursorPosition(0, 0);
-            Console.WriteLine(str);
-        });
-
-    source.SetItem("GOOG");                                     // any manipulations to the source set will be taken
-    source.SetItem("AAPL");                                     // into account            
-
-    Console.Read();
-}
+// prints:
+// 0
+// 0
+// 5000
+// 15000
+// 15010
+// 5000
 ```

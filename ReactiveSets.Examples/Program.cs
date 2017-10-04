@@ -31,6 +31,13 @@ namespace ReactiveSets.Examples
             source.SetItem(3);
             source.SetItem(37);
             source.DeleteItem(3);
+
+            // prints:
+            // 0
+            // 2
+            // 5
+            // 42
+            // 39
         }
 
         private static void Example2()
@@ -78,6 +85,14 @@ namespace ReactiveSets.Examples
             positions.SetItem("AAPL", 10);
             stockPrices.SetItem("AAPL", 1001);
             positions.DeleteItem("AAPL");
+
+            // prints:
+            // 0
+            // 0
+            // 5000
+            // 15000
+            // 15010
+            // 5000
         }
 
         private static void Example4()
