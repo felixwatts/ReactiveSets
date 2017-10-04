@@ -56,6 +56,8 @@ namespace ReactiveSets.Test
         [TestCase(5, 4, false)]
         public void ChangeOfKeyValue(int initialKeyValue, int newKeyValue, bool expectedIsItemEventuallyIncluded)
         {
+            _subject.Subscribe();
+
             var itemA = new Item("A", initialKeyValue);            
             _source.SetItem("A", itemA);
             itemA.Key.OnNext(newKeyValue);

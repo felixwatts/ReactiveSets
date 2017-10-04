@@ -3,17 +3,18 @@ using ReactiveSets;
 
 public class Value<T> : FastSubject<T>, IValue<T>
 {
-    public T Current { get; private set; }
+    public T Current { get; protected set; }
 
-    public Value(T initialValue)
+    public Value(T initialValue, Func<IDisposable> activate = null) : base(activate)
     {
         Current = initialValue;
     }
 
     public override IDisposable Subscribe(IObserver<T> observer)
-    {
+    {        
         observer.OnNext(Current);
-        return base.Subscribe(observer);
+        var sub = base.Subscribe(observer);        
+        return sub;
     }
 
     public override void OnNext(T value)

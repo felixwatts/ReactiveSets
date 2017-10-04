@@ -52,7 +52,7 @@ internal class Snapshotter<TId, TPayload> : IObserver<Delta<TId, TPayload>>
                 }
                 break;
             case DeltaType.SetItem:
-                _content.Add(delta.Id, delta.Payload);
+                _content[delta.Id] = delta.Payload;
                 break;
             case DeltaType.Clear:
             case DeltaType.DeleteItem:

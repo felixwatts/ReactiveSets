@@ -4,56 +4,36 @@ using System.Linq;
 
 namespace ReactiveSets
 {
-    internal class DynamicSubsetter<TId, TPayload, TDynamic> : SetToSet<TId, TPayload, TId, TPayload>
+    internal class DynamicSubsetter<TId, TPayload, TDynamic> : DynamicToSet<TId, TPayload, TDynamic, TPayload>
     {
-        private readonly Func<TPayload, IObservable<TDynamic>> _payloadToObservable; 
         private readonly Predicate<TDynamic> _condition;
-        private readonly Dictionary<TId, IDisposable> _subscriptionById;
 
-        public DynamicSubsetter(IObservable<Delta<TId, TPayload>> source, Func<TPayload, IObservable<TDynamic>> payloadToObservable, Predicate<TDynamic> condition) 
-            : base(source)
+        public DynamicSubsetter(
+            IObservable<Delta<TId, TPayload>> source, 
+            Func<TPayload, IObservable<TDynamic>> payloadToObservable, 
+            Predicate<TDynamic> condition) 
+            : base(source, payloadToObservable)
         {
-            _payloadToObservable = payloadToObservable;
             _condition = condition;
-            _subscriptionById = new Dictionary<TId, IDisposable>();
         }
 
-        protected override void OnClear()
-        {        
-            _subscriptionById.Values.DisposeAll(); 
-            _subscriptionById.Clear();          
-            base.OnClear();
-        }
-
-        protected override void OnDeleteItem(TId id)
+        protected override void OnDynamicNext(TId id, TDynamic next, TPayload payload)
         {
-            _subscriptionById[id].Dispose();
-            _subscriptionById.Remove(id);
-
-            if(_content.ContainsKey(id))
-                _content.DeleteItem(id);
-        }
-
-        protected override void OnSetItem(TId id, TPayload payload)
-        {
-            IDisposable existingSubscription = null;
-            _subscriptionById.TryGetValue(id, out existingSubscription);
-            existingSubscription?.Dispose();
-
-            var newSubscription = _payloadToObservable(payload).Subscribe(next => OnDynamicNext(id, next, payload));
-            _subscriptionById[id] = newSubscription;
-        }
-
-        private void OnDynamicNext(TId id, TDynamic next, TPayload payload)
-        {
-            var shouldInclude = _condition(next);
-            var isIncluded = _content.ContainsKey(id);
-
-            if(shouldInclude == isIncluded) return;
+            var shouldInclude = _condition(next);            
 
             if(shouldInclude)
+            {
                 _content.SetItem(id, payload);
-            else _content.DeleteItem(id);
+            }
+            else
+            {
+                var isIncluded = _content.ContainsKey(id);
+                
+                if(isIncluded)
+                {
+                    _content.DeleteItem(id);
+                }                
+            }
         }
     }
 } 

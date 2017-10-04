@@ -20,14 +20,26 @@ namespace ReactiveSets
 
         protected override void OnSetItem(TId id, TPayload payload)
         {
-            var shouldInclude = _condition(id, payload);
-            var isIncluded = _content.ContainsKey(id);
-
-            if(shouldInclude == isIncluded) return;
+            var shouldInclude = _condition(id, payload);            
 
             if(shouldInclude)
+            {
                 _content.SetItem(id, payload);
-            else _content.DeleteItem(id);
+            }
+            else
+            {
+                var isIncluded = _content.ContainsKey(id);
+                
+                if(isIncluded)
+                {
+                    _content.DeleteItem(id);
+                }                
+            }
+        }
+
+        protected override void Reset()
+        {
+            // no op
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
+using System.Linq;
 
 namespace ReactiveSets
 {   
@@ -12,10 +13,12 @@ namespace ReactiveSets
     {
         private readonly ISubject<Delta<TId, TPayload>> _subscribers;
         private readonly Dictionary<TId, TPayload> _content;
+        private readonly bool _disposeItemsOnDelete;
         private uint _bulkUpdateNestDepth;
 
-        public Set(Func<IDisposable> subscribeToSource = null)
+        public Set(Func<IDisposable> subscribeToSource = null, bool disposeItemsOnDelete = false)
         {
+            _disposeItemsOnDelete = disposeItemsOnDelete;
             _content = new Dictionary<TId, TPayload>();
             if(subscribeToSource == null)
             {
@@ -34,7 +37,7 @@ namespace ReactiveSets
                     });
                 };
 
-                _subscribers = new ReferenceCountingSubject<Delta<TId, TPayload>>(subscribeToSourceAndResetOnUnsubscribe);
+                _subscribers = new FastSubject<Delta<TId, TPayload>>(subscribeToSourceAndResetOnUnsubscribe);
             }
         }
 
@@ -44,19 +47,27 @@ namespace ReactiveSets
         }
 
         public void SetItem(TId id, TPayload payload)
-        {
+        {        
+            var toDispose = GetAsDisposable(id);
+
             _content[id] = payload;
             var delta = Delta<TId, TPayload>.SetItem(id, payload);
             _subscribers.OnNext(delta);
+
+            toDispose?.Dispose();
         }
 
         public void DeleteItem(TId id)
         {
             if(!_content.ContainsKey(id)) throw new InvalidOperationException("Cannot remove non-existent item");
 
+            var toDispose = GetAsDisposable(id);
+
             _content.Remove(id);
             var delta = Delta<TId, TPayload>.DeleteItem(id);
             _subscribers.OnNext(delta);
+
+            toDispose?.Dispose();
         }
 
         public void BeginBulkUpdate()
@@ -75,8 +86,10 @@ namespace ReactiveSets
 
         public void Clear()
         {
+            var toDispose = GetAllAsDisposable();
             _content.Clear();
             _subscribers.OnNext(Delta<TId, TPayload>.Clear);
+            toDispose?.DisposeAll();
         }        
 
         public void OnCompleted()
@@ -113,8 +126,11 @@ namespace ReactiveSets
 
         public IDisposable Subscribe(IObserver<Delta<TId, TPayload>> observer)
         {
-            SendCurrentContentToSubscriber(observer);
-            return _subscribers.Subscribe(observer);
+            observer.OnNext(Delta<TId, TPayload>.BeginBulkUpdate); 
+            SendCurrentContentToSubscriber(observer);                                      
+            var sub = _subscribers.Subscribe(observer);                    
+            observer.OnNext(Delta<TId, TPayload>.EndBulkUpdate);
+            return sub;
         }
 
         public IEnumerable<TId> Ids => _content.Keys;
@@ -131,15 +147,11 @@ namespace ReactiveSets
             for(int n = 0; n < _bulkUpdateNestDepth; n++)
                 observer.OnNext(Delta<TId, TPayload>.BeginBulkUpdate);
 
-            observer.OnNext(Delta<TId, TPayload>.BeginBulkUpdate);
-
             foreach(var kvp in _content)
             {
                 var delta = Delta<TId, TPayload>.SetItem(kvp.Key, kvp.Value);
                 observer.OnNext(delta);
             }
-
-            observer.OnNext(Delta<TId, TPayload>.EndBulkUpdate);
         }
 
         public bool ContainsKey(TId key)
@@ -161,5 +173,28 @@ namespace ReactiveSets
         {
             return ((IReadOnlyDictionary<TId, TPayload>)_content).GetEnumerator();
         }
+
+        private IDisposable GetAsDisposable(TId id)
+        {
+            if(!_disposeItemsOnDelete)
+            {
+                return null;
+            }
+
+            TPayload payload;
+            _content.TryGetValue(id, out payload);
+            
+            return payload as IDisposable;
+        }
+
+        private IEnumerable<IDisposable> GetAllAsDisposable()
+        {
+            if(!_disposeItemsOnDelete)
+            {
+                return null;
+            }
+
+            return _content.Values.OfType<IDisposable>().ToArray();
+        } 
     }
 }

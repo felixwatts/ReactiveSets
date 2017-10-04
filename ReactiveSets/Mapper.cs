@@ -40,13 +40,17 @@ namespace ReactiveSets
 
         protected override void OnClear()
         {
+            Reset();
+            base.OnClear();
+        }
+
+        protected override void Reset()
+        {
             if(_disposeOnDelete)
             {
-                var toDispose = _content.Payloads.OfType<IDisposable>().ToArray();
-                _content.Clear();
+                var toDispose = _content.Payloads.OfType<IDisposable>().ToArray();                
                 toDispose.DisposeAll();
             }
-            else base.OnClear();
         }
     } 
 }

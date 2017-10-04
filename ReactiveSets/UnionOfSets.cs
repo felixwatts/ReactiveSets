@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ReactiveSets
 {
-    public class UnionOfSets<TIdSet, TId, TPayload> : SetOfSetsToSet<TIdSet, TId, TPayload>
+    public class UnionOfSets<TIdSet, TId, TPayload> : SetOfSetsToSet<TIdSet, TId, TPayload, TPayload>
     {
         private Dictionary<TIdSet, HashSet<TId>> _idsBySet;
         private Dictionary<TId, uint> _countById;

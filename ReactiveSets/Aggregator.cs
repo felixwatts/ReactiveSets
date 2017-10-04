@@ -9,7 +9,11 @@ namespace ReactiveSets
         private readonly Func<IEnumerable<TPayloadIn>, TPayloadOut> _aggregate;
         private readonly Dictionary<TIdIn, TPayloadIn> _content;
 
-        public Aggregator(IObservable<Delta<TIdIn, TPayloadIn>> source, Func<IEnumerable<TPayloadIn>, TPayloadOut> aggregate) : base(source)
+        public Aggregator(
+            IObservable<Delta<TIdIn, TPayloadIn>> source, 
+            Func<IEnumerable<TPayloadIn>, TPayloadOut> aggregate,
+            TPayloadOut initialValue) 
+            : base(source, initialValue)
         {
             _aggregate = aggregate;
             _content = new Dictionary<TIdIn, TPayloadIn>();
@@ -36,7 +40,7 @@ namespace ReactiveSets
 
         protected override void OnSetItem(TIdIn id, TPayloadIn payload)
         {
-            _content.Add(id, payload);
+            _content[id] = payload;
             ReaggregateAndPublish();
         }
 

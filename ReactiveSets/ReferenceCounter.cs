@@ -6,15 +6,15 @@ using System.Reactive.Disposables;
 
 namespace ReactiveSets
 {
-    public class ReferenceCountingSubscriber : IDisposable
+    public class ReferenceCounter : IDisposable
     {
-        private readonly Func<IDisposable> _subscribe;
+        private readonly Func<IDisposable> _activate;
         private uint _referenceCount;        
         private IDisposable _subscription;
 
-        public ReferenceCountingSubscriber(Func<IDisposable> subscribe)
+        public ReferenceCounter(Func<IDisposable> activate)
         {
-            _subscribe = subscribe;
+            _activate = activate;
         }
 
         public void IncrementReferenceCount()
@@ -23,7 +23,7 @@ namespace ReactiveSets
 
             if(_referenceCount == 1)
             {
-                _subscription = _subscribe();
+                _subscription = _activate();
             }
         }
 

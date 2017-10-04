@@ -1,15 +1,23 @@
 using System;
 using System.Reactive;
+using System.Reactive.Disposables;
 
 namespace ReactiveSets
 {   
     public abstract class SetToSet<TIdIn, TPayloadIn, TIdOut, TPayloadOut> : ISet<TIdOut, TPayloadOut>, IObserver<Delta<TIdIn, TPayloadIn>>
     {
         protected readonly Set<TIdOut, TPayloadOut> _content;
+        private readonly IObservable<Delta<TIdIn, TPayloadIn>> _source;
 
         protected SetToSet(IObservable<Delta<TIdIn, TPayloadIn>> source)
         {
-            _content = new Set<TIdOut, TPayloadOut>(() => source.Subscribe(this));
+            _source = source;
+            _content = new Set<TIdOut, TPayloadOut>(SubscribeToSource);
+        }
+
+        public IDisposable Subscribe(IObserver<Delta<TIdOut, TPayloadOut>> observer)
+        {
+            return _content.Subscribe(observer);
         }
 
         public virtual void OnCompleted()
@@ -61,10 +69,16 @@ namespace ReactiveSets
 
         protected abstract void OnSetItem(TIdIn id, TPayloadIn payload);
         protected abstract void OnDeleteItem(TIdIn id);
+        protected abstract void Reset();  
 
-        public IDisposable Subscribe(IObserver<Delta<TIdOut, TPayloadOut>> observer)
+        private IDisposable SubscribeToSource()
         {
-            return _content.Subscribe(observer);
-        }
+            var sub = _source.Subscribe(this);
+            return Disposable.Create(() =>
+            {
+                sub.Dispose();
+                Reset();
+            });
+        }      
     } 
 }

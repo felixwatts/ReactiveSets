@@ -57,6 +57,13 @@ namespace ReactiveSets
             return new Mapper<TIdIn, TPayloadIn, TIdIn, TPayloadOut>(source, id => id, (id, payload) => payloadMapping(payload), disposeOnDelete);
         }
 
+        public static ISet<TIdIn, TPayloadOut> SelectDynamic<TIdIn, TPayloadIn, TPayloadOut>(
+            this IObservable<Delta<TIdIn, TPayloadIn>> source,
+            Func<TPayloadIn, IObservable<TPayloadOut>> payloadToObservable)
+        {
+            return new DynamicMapper<TIdIn, TPayloadIn, TPayloadOut>(source, payloadToObservable);
+        }
+
         public static ISet<TId, TPayload> Union<TIdSet, TId,TPayload>(
             this IObservable<Delta<TIdSet, IObservable<Delta<TId, TPayload>>>> source)
         {
@@ -85,12 +92,22 @@ namespace ReactiveSets
             return new DynamicSubsetter<TId, TPayload, TDynamic>(source, payloadToObservable, condition);
         }
 
-        public static IObservable<TPayloadOut> Aggregate<TIdIn, TPayloadIn, TPayloadOut>(
+        public static IValue<TPayloadOut> Aggregate<TIdIn, TPayloadIn, TPayloadOut>(
             this IObservable<Delta<TIdIn, TPayloadIn>> source,
-            Func<IEnumerable<TPayloadIn>, TPayloadOut> aggregate)
+            Func<IEnumerable<TPayloadIn>, TPayloadOut> aggregate,
+            TPayloadOut initialValue = default(TPayloadOut))
         {
-            return new Aggregator<TIdIn, TPayloadIn, TPayloadOut>(source, aggregate);
-        }        
+            return new Aggregator<TIdIn, TPayloadIn, TPayloadOut>(source, aggregate, initialValue);
+        }  
+
+        public static ISet<TId, TPayloadOut> Join<TId, TPayloadLeft, TPayloadRight, TPayloadOut>(
+            this ISet<TId, TPayloadLeft> left,
+            ISet<TId, TPayloadRight> right,
+            Func<TPayloadLeft, TPayloadRight, TPayloadOut> join,
+            bool disposeItemsOnDelete = false)
+        {
+            return new Joiner<TId, TPayloadLeft, TPayloadRight, TPayloadOut>(left, right, join, disposeItemsOnDelete);
+        }
 
         public static TValue FindOrAdd<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, Func<TValue> valueFactory)
         {

@@ -11,6 +11,15 @@ namespace ReactiveSets
         private IObserver<T> _singleSubscriber;
         private HashSet<IObserver<T>> _subscribersMap;
         private IObserver<T>[] _publishTo;
+        private readonly ReferenceCounter _activator;
+
+        public FastSubject(Func<IDisposable> activate = null)
+        {
+            if(activate != null)
+            {
+                _activator = new ReferenceCounter(activate);
+            }
+        }
 
         public void OnCompleted()
         {
@@ -38,7 +47,7 @@ namespace ReactiveSets
         }
 
         public virtual IDisposable Subscribe(IObserver<T> observer)
-        {
+        {            
             _publishTo = null;
 
             if(_singleSubscriber == null)
@@ -57,6 +66,8 @@ namespace ReactiveSets
                 _subscribersMap.Add(observer);
             }
 
+            _activator?.IncrementReferenceCount();
+
             return Disposable.Create(() => Unsubscribe(observer));
         }
 
@@ -72,6 +83,7 @@ namespace ReactiveSets
             _singleSubscriber = null;
             _subscribersMap?.Remove(observer);
             _publishTo = null;
+            _activator?.DecrementReferenceCount();
         }
 
         private IObserver<T>[] GetSubscribers()
