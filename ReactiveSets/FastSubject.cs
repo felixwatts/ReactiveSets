@@ -48,15 +48,17 @@ namespace ReactiveSets
 
         public virtual IDisposable Subscribe(IObserver<T> observer)
         {            
+            if(observer == null) throw new ArgumentNullException("observer");
+
             _publishTo = null;
 
-            if(_singleSubscriber == null)
-            {
-                _singleSubscriber = observer;
-            }
-            else if(_subscribersMap != null)
+            if(_subscribersMap != null)
             {
                 _subscribersMap.Add(observer);
+            }
+            else if(_singleSubscriber == null)
+            {
+                _singleSubscriber = observer;
             }
             else
             {

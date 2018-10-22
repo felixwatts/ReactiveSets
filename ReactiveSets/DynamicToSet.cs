@@ -36,11 +36,12 @@ namespace ReactiveSets
 
         protected override void OnSetItem(TId id, TPayloadIn payload)
         {
-            IDisposable existingSubscription = null;
-            _subscriptionById.TryGetValue(id, out existingSubscription);
+            _subscriptionById.TryGetValue(id, out var existingSubscription);
             existingSubscription?.Dispose();
 
-            var newSubscription = _payloadToObservable(payload).Subscribe(next => OnDynamicNext(id, next, payload));
+            var observable = _payloadToObservable(payload);
+
+            var newSubscription = observable.Subscribe(next => OnDynamicNext(id, next, payload));
             _subscriptionById[id] = newSubscription;
         }
 

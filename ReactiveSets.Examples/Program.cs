@@ -11,7 +11,8 @@ namespace ReactiveSets.Examples
         {
             //Example1();
             //Example2();
-            Example3();
+            //Example3();
+            Example4();
         }
 
         private static void Example1()
@@ -97,22 +98,29 @@ namespace ReactiveSets.Examples
 
         private static void Example4()
         {
-            var source = new Set<string>();                                 // a set of stock names that can change over time
+            // a set of stock names that can change over time
+            var source = new Set<string>();                                 
 
             source
-                .Select(n => new Stock(n))                                  // map from stock names to stock objects
-                .WhereDynamic(s => s.Price, p => p > 100)                 // filter for stocks who's price has moved a lot
-                .SelectDynamic(s => s.Price.Select(p => $"{s.Name}:{p:f2}:{System.Threading.Thread.CurrentThread.ManagedThreadId}"))// map each stock to just its name
-                .Aggregate(ns => string.Join(Environment.NewLine, ns.OrderBy(n => n)))      // reduce the collection to a single string of stock names
-                .Subscribe(str =>                                           // print the result each time it changes
+                // map from stock names to stock objects, the stock object has observable properties that change over time
+                .Select(n => new Stock(n))
+                // filter for stocks whose price is over 100, note that we are filtering on a property that changes over time
+                .WhereDynamic(s => s.Price, p => p > 100)
+                // map each stock to a string summarizing its name and price, note that we are mapping a property that changes over time            
+                .SelectDynamic(s => s.Price.Select(p => $"{s.Name}:{p:f2}"))
+                // reduce the collection to a single string summarizing the filtered stocks and their prices
+                .Aggregate(ns => string.Join(Environment.NewLine, ns.OrderBy(n => n)))
+                // print the result each time it changes   
+                .Subscribe(str =>                                           
                 {
                     Console.Clear();
                     Console.SetCursorPosition(0, 0);
                     Console.WriteLine(str);
                 });
 
-            source.SetItem("GOOG");                                     // any manipulations to the source set will be taken
-            source.SetItem("AAPL");                                     // into account            
+            // any manipulations to the source set will be taken into account 
+            source.SetItem("GOOG");                                 
+            source.SetItem("AAPL");          
 
             Console.Read();
         }
@@ -139,6 +147,9 @@ namespace ReactiveSets.Examples
         }
 
         private static Random _random = new Random();
-        private static IObservable<long> _ticker = Observable.Interval(TimeSpan.FromSeconds(0.2)).ObserveOn(Scheduler.CurrentThread);
+        private static IObservable<long> _ticker = Observable
+            .Interval(TimeSpan.FromSeconds(0.2))
+            // Since the ReactiveSets is not thread safe, its important to avoid concurrent updates
+            .ObserveOn(new SequentialScheduler());
     }
 }

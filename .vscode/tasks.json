@@ -7,7 +7,7 @@
         {
             "taskName": "build",
             "args": [
-                "${workspaceRoot}/project.json"
+                "${workspaceRoot}/ReactiveSets.sln"
             ],
             "isBuildCommand": true,
             "problemMatcher": "$msCompile"
