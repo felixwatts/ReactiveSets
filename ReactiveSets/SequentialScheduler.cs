@@ -9,6 +9,7 @@ public class SequentialScheduler : IScheduler, IDisposable
 {
     private readonly ConcurrentQueue<Action> _taskQueue;
     private readonly CancellationTokenSource _canceler;
+    private readonly Task _workerTask;
 
     public DateTimeOffset Now => DateTimeOffset.Now;
 
@@ -16,12 +17,17 @@ public class SequentialScheduler : IScheduler, IDisposable
     {
         _canceler = new CancellationTokenSource();
         _taskQueue = new ConcurrentQueue<Action>();
-        Task.Factory.StartNew(WorkLoop, TaskCreationOptions.LongRunning, _canceler.Token);
+        _workerTask = Task.Factory.StartNew(WorkLoop, TaskCreationOptions.LongRunning, _canceler.Token);
     }
 
     public void Dispose()
     {
         _canceler.Cancel();
+
+        if(_workerTask.Status == TaskStatus.Faulted)
+        {
+            throw _workerTask.Exception;
+        }        
     }
 
     public IDisposable Schedule<TState>(TState state, Func<IScheduler, TState, IDisposable> action)

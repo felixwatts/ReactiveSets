@@ -12,7 +12,9 @@ namespace ReactiveSets.Examples
             //Example1();
             //Example2();
             //Example3();
-            Example4();
+            //Example4();
+            //Example5_Union();
+            Example6_Union();
         }
 
         private static void Example1()
@@ -124,6 +126,68 @@ namespace ReactiveSets.Examples
 
             Console.Read();
         }
+
+        private static void Example5_Union()
+        {
+            var technologyStocks = new Set<string, Stock>
+            {
+                { "GOOG", new Stock("GOOG") }
+            };
+
+            var energyStocks = new Set<string, Stock>
+            {
+                { "EOG", new Stock("EOG") },
+                { "XOM", new Stock("XOM") }
+            };
+
+            // my portfolio is the union of my technology stocks and my energy stock
+            var myPortfolio = new[] { technologyStocks, energyStocks }.Union();
+
+            // print a live summary of my portfolio ot the console
+            myPortfolio
+                .SelectDynamic(s => s.Price.Select(p => $"{s.Name}:{p:f2}"))
+                .Aggregate(ns => string.Join(Environment.NewLine, ns.OrderBy(n => n))) 
+                .Subscribe(str =>                                           
+                {
+                    Console.Clear();
+                    Console.SetCursorPosition(0, 0);
+                    Console.WriteLine(str);
+                });
+
+            Console.Read();
+
+            // modifications the the sources of the union are automatically handled
+            energyStocks.DeleteItem("XOM");
+            energyStocks.SetItem("PEGI", new Stock("PEGI"));
+
+            Console.Read();
+        }
+
+        private static void Example6_Union()
+        {
+            var reactors = new Set<string, Reactor>();
+
+            // print a live summary of my portfolio ot the console
+            reactors
+                .Union()
+                .Aggregate(ns => string.Join(Environment.NewLine, ns.OrderBy(n => n))) 
+                .Subscribe(str =>                                           
+                {
+                    Console.Clear();
+                    Console.SetCursorPosition(0, 0);
+                    Console.WriteLine(str);
+                });
+
+            reactors.SetItem("REACTOR1", new Reactor("REACTOR1"));
+            reactors.SetItem("REACTOR2", new Reactor("REACTOR2"));
+
+            Console.Read();
+
+            reactors.DeleteItem("REACTOR1");
+            reactors.SetItem("REACTOR3", new Reactor("REACTOR3"));
+
+            Console.Read();
+        }
     }
 
     public class Stock
@@ -152,4 +216,55 @@ namespace ReactiveSets.Examples
             // Since the ReactiveSets is not thread safe, its important to avoid concurrent updates
             .ObserveOn(new SequentialScheduler());
     }
+
+    public class Reactor : ISet<string, string>
+    {
+        private static string[] StatusReports = new[]
+        {
+            "Elevated gamma radiation detected in sector 4",
+            "Backup generators are under water",
+            "Reactor pressure is crazy high right now"
+        };
+
+        private readonly Set<string, string> _statusReports;
+        private readonly string _name;
+        private readonly IDisposable _tickerSubscription;
+
+        public Reactor(string name)
+        {
+            _name = name;
+            _statusReports = new Set<string, string>();
+            _tickerSubscription = _ticker.Subscribe(RefreshStatusReports);
+        }
+
+        public IDisposable Subscribe(IObserver<IDelta<string, string>> observer)
+        {
+            return _statusReports.Subscribe(observer);
+        }
+
+        private void RefreshStatusReports(long _)
+        {            
+            _statusReports.Clear();
+
+            while(true)
+            {
+                var i = _dice.Next(StatusReports.Length+1);
+                if(i < StatusReports.Length)
+                {
+                    _statusReports.SetItem($"{_name}: {StatusReports[i]}");
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        private static IObservable<long> _ticker = Observable
+            .Interval(TimeSpan.FromSeconds(2))
+            // Since the ReactiveSets is not thread safe, its important to avoid concurrent updates
+            .ObserveOn(new SequentialScheduler());
+
+        private static Random _dice = new Random();
+    } 
 }

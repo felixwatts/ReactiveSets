@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ReactiveSets
 {
@@ -21,9 +22,27 @@ namespace ReactiveSets
             _countById.Clear();        
         }
 
+        protected override void OnSetSet(TIdSet id, IObservable<IDelta<TId, TPayload>> payload)
+        {
+            _idsBySet.Add(id, new HashSet<TId>());
+            base.OnSetSet(id, payload);            
+        }
+
+        protected override void OnDeleteSet(TIdSet setId)
+        {
+            base.OnDeleteSet(setId);
+
+            foreach(var id in _idsBySet[setId].ToArray())
+            {
+                OnDeleteItem(setId, id);
+            }
+
+            _idsBySet.Remove(setId);
+        }
+
         protected override void OnSetItem(TIdSet setId, TId id, TPayload payload)
         {
-            var incrementCount = _idsBySet.FindOrAdd(setId, () => new HashSet<TId>()).Add(id);
+            var incrementCount = _idsBySet[setId].Add(id);
             if(incrementCount)
             {
                 uint count = 0;
@@ -46,12 +65,10 @@ namespace ReactiveSets
 
         protected override void OnClear(TIdSet setId)
         {
-            foreach(var id in _idsBySet[setId])
+            foreach(var id in _idsBySet[setId].ToArray())
             {
                 OnDeleteItem(setId, id);
             }
-
-            _idsBySet.Remove(setId);
         }
     }
 }

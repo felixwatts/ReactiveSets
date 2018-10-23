@@ -134,6 +134,7 @@ namespace ReactiveSets
             oldSubscription?.Dispose();
 
             var newSubscription = payload.Subscribe(next => OnNext(id, next), error => OnError(id, error), () => OnCompleted(id));
+            _setSubscriptionBySetId[id] = newSubscription;
         }
 
         protected virtual void OnDeleteSet(TIdSet id)

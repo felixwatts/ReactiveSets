@@ -12,6 +12,18 @@ namespace ReactiveSets
             return new ValueFromObservable<T>(source, initialValue);
         }
 
+        // Just used to make C# collection initializer syntax work
+        public static void Add<TId, TPayload>(this Set<TId, TPayload> set, TId id, TPayload payload)
+        {
+            set.SetItem(id, payload);
+        }
+
+        // Just used to make C# collection initializer syntax work
+        public static void Add<TId>(this Set<TId, TId> set, TId item)
+        {
+            set.SetItem(item, item);
+        }
+
         public static void SetItem<TId>(this Set<TId, TId> set, TId item)
         {
             set.SetItem(item, item);
@@ -68,6 +80,19 @@ namespace ReactiveSets
             this IObservable<IDelta<TIdSet, IObservable<IDelta<TId, TPayload>>>> source)
         {
             return new UnionOfSets<TIdSet, TId, TPayload>(source);
+        }
+
+        public static ISet<TId, TPayload> Union<TId, TPayload>(
+            this IEnumerable<IObservable<IDelta<TId, TPayload>>> sets)
+        {
+            var container = new Set<int, IObservable<IDelta<TId, TPayload>>>();
+            int n = 0;
+            foreach(var set in sets)
+            {
+                container.SetItem(n , set);
+                n++;
+            }
+            return container.Union();
         }
 
         public static ISet<TId, TPayload> Where<TId, TPayload>(
