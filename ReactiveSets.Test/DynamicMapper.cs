@@ -17,7 +17,7 @@ namespace ReactiveSets.Test
         public void SetUp()
         {
             _source = new Set<string, IValue<int>>();
-            _subject = _source.SelectDynamic(s => s.Select(x => x * 2).ToValue(0));
+            _subject = _source.SelectDynamic((_, s) => s.Select(x => x * 2).ToValue(0));
         }
 
         [Test]

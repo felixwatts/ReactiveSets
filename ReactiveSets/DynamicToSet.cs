@@ -6,12 +6,12 @@ namespace ReactiveSets
 {
     internal abstract class DynamicToSet<TId, TPayloadIn, TDynamic, TPayloadOut> : SetToSet<TId, TPayloadIn, TId, TPayloadOut>
     {
-        private readonly Func<TPayloadIn, IObservable<TDynamic>> _payloadToObservable; 
+        private readonly Func<TId, TPayloadIn, IObservable<TDynamic>> _payloadToObservable; 
         private readonly Dictionary<TId, IDisposable> _subscriptionById;
 
         public DynamicToSet(
             IObservable<IDelta<TId, TPayloadIn>> source, 
-            Func<TPayloadIn, IObservable<TDynamic>> payloadToObservable) 
+            Func<TId, TPayloadIn, IObservable<TDynamic>> payloadToObservable) 
             : base(source)
         {
             _payloadToObservable = payloadToObservable;
@@ -39,7 +39,7 @@ namespace ReactiveSets
             _subscriptionById.TryGetValue(id, out var existingSubscription);
             existingSubscription?.Dispose();
 
-            var observable = _payloadToObservable(payload);
+            var observable = _payloadToObservable(id, payload);
 
             var newSubscription = observable.Subscribe(next => OnDynamicNext(id, next, payload));
             _subscriptionById[id] = newSubscription;

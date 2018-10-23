@@ -71,7 +71,7 @@ namespace ReactiveSets
 
         public static ISet<TIdIn, TPayloadOut> SelectDynamic<TIdIn, TPayloadIn, TPayloadOut>(
             this IObservable<IDelta<TIdIn, TPayloadIn>> source,
-            Func<TPayloadIn, IObservable<TPayloadOut>> payloadToObservable)
+            Func<TIdIn, TPayloadIn, IObservable<TPayloadOut>> payloadToObservable)
         {
             return new DynamicMapper<TIdIn, TPayloadIn, TPayloadOut>(source, payloadToObservable);
         }
@@ -149,7 +149,7 @@ namespace ReactiveSets
 
         public static ISet<TId, TPayload> WhereDynamic<TId, TPayload, TDynamic>(
             this IObservable<IDelta<TId, TPayload>> source,
-            Func<TPayload, IObservable<TDynamic>> payloadToObservable,
+            Func<TId, TPayload, IObservable<TDynamic>> payloadToObservable,
             Predicate<TDynamic> condition)
         {
             return new DynamicSubsetter<TId, TPayload, TDynamic>(source, payloadToObservable, condition);

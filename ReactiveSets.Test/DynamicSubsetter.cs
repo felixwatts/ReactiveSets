@@ -30,7 +30,7 @@ namespace ReactiveSets.Test
         public void SetUp()
         {
             _source = new Set<string, Item>();
-            _subject = _source.WhereDynamic(item => item.Key, n => n >= 5);
+            _subject = _source.WhereDynamic((_, item) => item.Key, n => n >= 5);
             _subscription = _subject.Subscribe();
         }
 

@@ -108,9 +108,9 @@ namespace ReactiveSets.Examples
                 // map from stock names to stock objects, the stock object has observable properties that change over time
                 .Select(n => new Stock(n))
                 // filter for stocks whose price is over 100, note that we are filtering on a property that changes over time
-                .WhereDynamic(s => s.Price, p => p > 100)
+                .WhereDynamic((_, s) => s.Price, p => p > 100)
                 // map each stock to a string summarizing its name and price, note that we are mapping a property that changes over time            
-                .SelectDynamic(s => s.Price.Select(p => $"{s.Name}:{p:f2}"))
+                .SelectDynamic((_, s) => s.Price.Select(p => $"{s.Name}:{p:f2}"))
                 // reduce the collection to a single string summarizing the filtered stocks and their prices
                 .Aggregate(ns => string.Join(Environment.NewLine, ns.OrderBy(n => n)))
                 // print the result each time it changes   
@@ -146,7 +146,7 @@ namespace ReactiveSets.Examples
 
             // print a live summary of my portfolio ot the console
             myPortfolio
-                .SelectDynamic(s => s.Price.Select(p => $"{s.Name}:{p:f2}"))
+                .SelectDynamic((_, s) => s.Price.Select(p => $"{s.Name}:{p:f2}"))
                 .Aggregate(ns => string.Join(Environment.NewLine, ns.OrderBy(n => n))) 
                 .Subscribe(str =>                                           
                 {
@@ -200,33 +200,35 @@ namespace ReactiveSets.Examples
             var arachnidSpecies = new Set<string, string>() { "Scorpion", "Funnel-web Spider" };
 
             // define some more sets in terms of their relation the the first sets
+            var s = new Set<string, ISet<string, string>>
+            {
+                // african mammals are species that live in africa and are mammals
+                { "African Mammal Species", new[] { africanSpecies, mammalSpecies }.Intersection() },
 
-            // endemic species are species that appear in only one place
-            var endemicSpecies = new[] { africanSpecies, australianSpecies }.Difference();
+                // vertebrate species are species that are either mammal or reptile
+                { "Vertebrate Species", new[]{ mammalSpecies, reptileSpecies }.Union() },
 
-            // african mammals are species that live in africa and are mammals
-            var africanMammals = new[] { africanSpecies, mammalSpecies }.Intersection();
-
-            // vertebrate species are species that are either mammal or reptile
-            var vertebrateSpecies = new[]{ mammalSpecies, reptileSpecies }.Union();
-
-            // print out the contents of each set each time it changes
-            endemicSpecies
-                .Aggregate(species => $"Endemic Species: {string.Join(", ", species)}")
-                .Subscribe(Console.WriteLine);
-
-            africanMammals
-                .Aggregate(species => $"African Mammal Species: {string.Join(", ", species)}")
-                .Subscribe(Console.WriteLine);
-
-            vertebrateSpecies
-                .Aggregate(species => $"Vertebrate Species: {string.Join(", ", species)}")
-                .Subscribe(Console.WriteLine);
+                // endemic species are species that appear in only one place
+                { "Endemic Species", new[] { africanSpecies, australianSpecies }.Difference() },
+            }
+            // reduce each set into a single string of its contents
+            .SelectDynamic((id, set) => set.Aggregate(species => $"{id}: {string.Join(", ", species)}"))
+            // print whenever anything changes
+            .Where(delta => delta.Type == DeltaType.SetItem)
+            .Subscribe(delta => Console.WriteLine(delta.Payload));            
 
             // modifications to the source sets are handled automatically
+
+            Console.WriteLine("Add Hyena to African Species");
             africanSpecies.SetItem("Hyena");
+
+            Console.WriteLine("Add Scorpion to Australian Species");
             australianSpecies.SetItem("Scorpion");     
+
+            Console.WriteLine("Add Hyena to Mammal Species");
             mammalSpecies.SetItem("Hyena");
+
+            Console.WriteLine("Remove Hyena from Mammal Species");
             mammalSpecies.DeleteItem("Hyena");
         }
     }
