@@ -55,8 +55,11 @@ internal class Snapshotter<TId, TPayload> : IObserver<IDelta<TId, TPayload>>
                 _content[delta.Id] = delta.Payload;
                 break;
             case DeltaType.Clear:
+                _content.Clear();
+                break;
             case DeltaType.DeleteItem:
-                throw new InvalidOperationException();
+                _content.Remove(delta.Id);
+                break;
         }
     }
 }

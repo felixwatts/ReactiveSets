@@ -95,6 +95,44 @@ namespace ReactiveSets
             return container.Union();
         }
 
+        public static ISet<TId, TPayload> Intersection<TIdSet, TId,TPayload>(
+            this IObservable<IDelta<TIdSet, IObservable<IDelta<TId, TPayload>>>> source)
+        {
+            return new IntersectionOfSets<TIdSet, TId, TPayload>(source);
+        }
+
+        public static ISet<TId, TPayload> Intersection<TId, TPayload>(
+            this IEnumerable<IObservable<IDelta<TId, TPayload>>> sets)
+        {
+            var container = new Set<int, IObservable<IDelta<TId, TPayload>>>();
+            int n = 0;
+            foreach(var set in sets)
+            {
+                container.SetItem(n , set);
+                n++;
+            }
+            return container.Intersection();
+        }
+
+        public static ISet<TId, TPayload> Difference<TIdSet, TId,TPayload>(
+            this IObservable<IDelta<TIdSet, IObservable<IDelta<TId, TPayload>>>> source)
+        {
+            return new DifferenceOfSets<TIdSet, TId, TPayload>(source);
+        }
+
+        public static ISet<TId, TPayload> Difference<TId, TPayload>(
+            this IEnumerable<IObservable<IDelta<TId, TPayload>>> sets)
+        {
+            var container = new Set<int, IObservable<IDelta<TId, TPayload>>>();
+            int n = 0;
+            foreach(var set in sets)
+            {
+                container.SetItem(n , set);
+                n++;
+            }
+            return container.Difference();
+        }
+
         public static ISet<TId, TPayload> Where<TId, TPayload>(
             this IObservable<IDelta<TId, TPayload>> source,
             Func<TId, TPayload, bool> condition)

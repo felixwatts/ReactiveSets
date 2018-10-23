@@ -55,11 +55,6 @@ namespace ReactiveSets
             return _content.Subscribe(observer);
         }
 
-        private IDisposable SubscribeToSource()
-        {
-            return _source.Subscribe(this);
-        }
-
         protected virtual void OnBeginBulkUpdateSets()
         {
             _content.BeginBulkUpdate();
@@ -141,6 +136,16 @@ namespace ReactiveSets
         {
             _setSubscriptionBySetId[id].Dispose();
             _setSubscriptionBySetId.Remove(id);
+        }
+
+        protected int GetSetCount()
+        {
+            return _setSubscriptionBySetId.Count;
+        }
+
+        private IDisposable SubscribeToSource()
+        {
+            return _source.Subscribe(this);
         }
     }    
 }
