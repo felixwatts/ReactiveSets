@@ -14,7 +14,8 @@ namespace ReactiveSets.Examples
             //Example3();
             //Example4();
             //Example5_Union();
-            Example6_Union();
+            //Example6_Union();
+            Example7_SetOperations();
         }
 
         private static void Example1()
@@ -187,6 +188,46 @@ namespace ReactiveSets.Examples
             reactors.SetItem("REACTOR3", new Reactor("REACTOR3"));
 
             Console.Read();
+        }
+
+        public static void Example7_SetOperations()
+        {
+            // create some sets defining class membership for some types of animal
+            var africanSpecies = new Set<string, string>() { "Giraffe", "Crocodile", "Scorpion" };
+            var australianSpecies = new Set<string, string>() { "Kangaroo", "Crocodile", "Funnel-web Spider" };
+            var mammalSpecies = new Set<string, string>() { "Giraffe", "Kangaroo" };
+            var reptileSpecies = new Set<string, string>() { "Crocodile" };
+            var arachnidSpecies = new Set<string, string>() { "Scorpion", "Funnel-web Spider" };
+
+            // define some more sets in terms of their relation the the first sets
+
+            // endemic species are species that appear in only one place
+            var endemicSpecies = new[] { africanSpecies, australianSpecies }.Difference();
+
+            // african mammals are species that live in africa and are mammals
+            var africanMammals = new[] { africanSpecies, mammalSpecies }.Intersection();
+
+            // vertebrate species are species that are either mammal or reptile
+            var vertebrateSpecies = new[]{ mammalSpecies, reptileSpecies }.Union();
+
+            // print out the contents of each set each time it changes
+            endemicSpecies
+                .Aggregate(species => $"Endemic Species: {string.Join(", ", species)}")
+                .Subscribe(Console.WriteLine);
+
+            africanMammals
+                .Aggregate(species => $"African Mammal Species: {string.Join(", ", species)}")
+                .Subscribe(Console.WriteLine);
+
+            vertebrateSpecies
+                .Aggregate(species => $"Vertebrate Species: {string.Join(", ", species)}")
+                .Subscribe(Console.WriteLine);
+
+            // modifications to the source sets are handled automatically
+            africanSpecies.SetItem("Hyena");
+            australianSpecies.SetItem("Scorpion");     
+            mammalSpecies.SetItem("Hyena");
+            mammalSpecies.DeleteItem("Hyena");
         }
     }
 
