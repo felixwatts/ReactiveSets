@@ -5,6 +5,7 @@ using ReactiveSets;
 using Moq;
 using System.Linq;
 using System.Diagnostics;
+using System.Reactive.Disposables;
 
 namespace ReactiveSets.Test
 {
@@ -12,11 +13,17 @@ namespace ReactiveSets.Test
     public class FastSubject
     {
         private ReactiveSets.FastSubject<int> _subject;
+        private int _activationLevel;
 
         [SetUp]
         public void SetUp()
         {
-            _subject = new ReactiveSets.FastSubject<int>();
+            _activationLevel = 0;
+            _subject = new ReactiveSets.FastSubject<int>(() =>
+            {
+                _activationLevel ++;
+                return Disposable.Create(() => _activationLevel--);
+            });
         }
 
         [TestCase(1)]
@@ -51,6 +58,25 @@ namespace ReactiveSets.Test
 
             _subject.OnNext(43);
             Assert.AreEqual(42, x);
+        }
+
+        [TestCase(0, 0, 0)]
+        [TestCase(1, 0, 1)]
+        [TestCase(2, 0, 1)]
+        [TestCase(2, 1, 1)]
+        [TestCase(1, 1, 0)]
+        [TestCase(2, 2, 0)]
+        public void IsActivatedAsLongAsThereIsAtLeastOneSubscriber(int numSubscribers, int numUnsubscribers, int expectedActivationLevel)
+        {
+            var mockObserver = new Mock<IObserver<int>>();
+            var subscriptions = Enumerable
+                .Range(0, numSubscribers)
+                .Select(_ => _subject.Subscribe(mockObserver.Object))
+                .ToArray();
+
+            subscriptions.Take(numUnsubscribers).DisposeAll();
+
+            Assert.AreEqual(expectedActivationLevel, _activationLevel);
         }
     }
 }
