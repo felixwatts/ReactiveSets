@@ -8,7 +8,7 @@ namespace ReactiveSets
         private Dictionary<TIdSet, HashSet<TId>> _idsBySet;
         private Dictionary<TId, uint> _countById;
 
-        public UnionOfSets(IObservable<Delta<TIdSet, IObservable<Delta<TId, TPayload>>>> source) : base(source)
+        public UnionOfSets(IObservable<IDelta<TIdSet, IObservable<IDelta<TId, TPayload>>>> source) : base(source)
         {
             _idsBySet = new Dictionary<TIdSet, HashSet<TId>>();
             _countById = new Dictionary<TId, uint>();

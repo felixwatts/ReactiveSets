@@ -4,18 +4,18 @@ using System.Reactive.Disposables;
 
 namespace ReactiveSets
 {   
-    public abstract class SetToSet<TIdIn, TPayloadIn, TIdOut, TPayloadOut> : ISet<TIdOut, TPayloadOut>, IObserver<Delta<TIdIn, TPayloadIn>>
+    public abstract class SetToSet<TIdIn, TPayloadIn, TIdOut, TPayloadOut> : ISet<TIdOut, TPayloadOut>, IObserver<IDelta<TIdIn, TPayloadIn>>
     {
         protected readonly Set<TIdOut, TPayloadOut> _content;
-        private readonly IObservable<Delta<TIdIn, TPayloadIn>> _source;
+        private readonly IObservable<IDelta<TIdIn, TPayloadIn>> _source;
 
-        protected SetToSet(IObservable<Delta<TIdIn, TPayloadIn>> source)
+        protected SetToSet(IObservable<IDelta<TIdIn, TPayloadIn>> source)
         {
             _source = source;
             _content = new Set<TIdOut, TPayloadOut>(SubscribeToSource);
         }
 
-        public IDisposable Subscribe(IObserver<Delta<TIdOut, TPayloadOut>> observer)
+        public IDisposable Subscribe(IObserver<IDelta<TIdOut, TPayloadOut>> observer)
         {
             return _content.Subscribe(observer);
         }
@@ -30,7 +30,7 @@ namespace ReactiveSets
             _content.OnError(error);
         }
 
-        public virtual void OnNext(Delta<TIdIn, TPayloadIn> next)
+        public virtual void OnNext(IDelta<TIdIn, TPayloadIn> next)
         {
             switch(next.Type)
             {

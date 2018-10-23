@@ -2,5 +2,5 @@ using System;
 
 namespace ReactiveSets
 {
-    public interface ISet<TId, TPayload> : IObservable<Delta<TId, TPayload>>{}
+    public interface ISet<out TId, out TPayload> : IObservable<IDelta<TId, TPayload>>{}
 }

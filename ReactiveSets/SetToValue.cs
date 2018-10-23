@@ -3,15 +3,15 @@ using System.Reactive.Subjects;
 
 namespace ReactiveSets
 {
-    internal abstract class SetToValue<TIdIn, TPayloadIn, TPayloadOut> : IValue<TPayloadOut>, IObserver<Delta<TIdIn, TPayloadIn>>
+    internal abstract class SetToValue<TIdIn, TPayloadIn, TPayloadOut> : IValue<TPayloadOut>, IObserver<IDelta<TIdIn, TPayloadIn>>
     {
         protected readonly Value<TPayloadOut> _value;
-        private readonly IObservable<Delta<TIdIn, TPayloadIn>> _source;
+        private readonly IObservable<IDelta<TIdIn, TPayloadIn>> _source;
         protected uint _bulkUpdateNestDepth;
 
         public TPayloadOut Current => _value.Current;
 
-        protected SetToValue(IObservable<Delta<TIdIn, TPayloadIn>> source, TPayloadOut initialValue)
+        protected SetToValue(IObservable<IDelta<TIdIn, TPayloadIn>> source, TPayloadOut initialValue)
         {
             _value = new Value<TPayloadOut>(initialValue, SubscribeToSource);
             _source = source;
@@ -27,7 +27,7 @@ namespace ReactiveSets
             _value.OnError(error);
         }
 
-        public virtual void OnNext(Delta<TIdIn, TPayloadIn> next)
+        public virtual void OnNext(IDelta<TIdIn, TPayloadIn> next)
         {
             switch(next.Type)
             {

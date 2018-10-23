@@ -9,7 +9,7 @@ namespace ReactiveSets
         private readonly Predicate<TDynamic> _condition;
 
         public DynamicSubsetter(
-            IObservable<Delta<TId, TPayload>> source, 
+            IObservable<IDelta<TId, TPayload>> source, 
             Func<TPayload, IObservable<TDynamic>> payloadToObservable, 
             Predicate<TDynamic> condition) 
             : base(source, payloadToObservable)

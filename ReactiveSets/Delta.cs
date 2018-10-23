@@ -2,7 +2,14 @@ using System;
 
 namespace ReactiveSets
 {
-    public struct Delta<TId, TPayload>
+    public interface IDelta<out TId, out TPayload>
+    {
+        DeltaType Type { get; }
+        TId Id { get; }
+        TPayload Payload { get; }
+    }
+
+    public struct Delta<TId, TPayload> : IDelta<TId, TPayload>
     {
         public DeltaType Type { get; private set; }
         public TId Id { get; private set; }

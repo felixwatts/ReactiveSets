@@ -20,7 +20,7 @@ namespace ReactiveSets
             _content = new Set<TIdOut, TPayloadOut>(SubscribeToSources, disposeItemsOnDelete);
         }
 
-        public IDisposable Subscribe(IObserver<Delta<TIdOut, TPayloadOut>> observer)
+        public IDisposable Subscribe(IObserver<IDelta<TIdOut, TPayloadOut>> observer)
         {
             return _content.Subscribe(observer);
         }
@@ -38,7 +38,7 @@ namespace ReactiveSets
             });
         }        
 
-        private void OnNextLeft(Delta<TIdLeft, TPayloadLeft> next)
+        private void OnNextLeft(IDelta<TIdLeft, TPayloadLeft> next)
         {
             switch(next.Type)
             {
@@ -60,7 +60,7 @@ namespace ReactiveSets
             }
         }
 
-        private void OnNextRight(Delta<TIdRight, TPayloadRight> next)
+        private void OnNextRight(IDelta<TIdRight, TPayloadRight> next)
         {
             switch(next.Type)
             {

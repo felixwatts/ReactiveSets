@@ -7,7 +7,7 @@ namespace ReactiveSets
     internal class DynamicMapper<TId, TPayload, TDynamic> : DynamicToSet<TId, TPayload, TDynamic, TDynamic>
     {
         public DynamicMapper(
-            IObservable<Delta<TId, TPayload>> source, 
+            IObservable<IDelta<TId, TPayload>> source, 
             Func<TPayload, IObservable<TDynamic>> payloadToObservable) 
             : base(source, payloadToObservable)
         {

@@ -10,7 +10,7 @@ namespace ReactiveSets
         private readonly Dictionary<TIdIn, TPayloadIn> _content;
 
         public Aggregator(
-            IObservable<Delta<TIdIn, TPayloadIn>> source, 
+            IObservable<IDelta<TIdIn, TPayloadIn>> source, 
             Func<IEnumerable<TPayloadIn>, TPayloadOut> aggregate,
             TPayloadOut initialValue) 
             : base(source, initialValue)

@@ -10,7 +10,7 @@ namespace ReactiveSets
         private readonly Dictionary<TId, IDisposable> _subscriptionById;
 
         public DynamicToSet(
-            IObservable<Delta<TId, TPayloadIn>> source, 
+            IObservable<IDelta<TId, TPayloadIn>> source, 
             Func<TPayloadIn, IObservable<TDynamic>> payloadToObservable) 
             : base(source)
         {

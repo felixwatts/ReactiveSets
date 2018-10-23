@@ -9,9 +9,9 @@ namespace ReactiveSets
 {   
     public class Set<TId> : Set<TId, TId>{}
 
-    public class Set<TId, TPayload> : ISet<TId, TPayload>, IObserver<Delta<TId, TPayload>>, IReadOnlyDictionary<TId, TPayload>
+    public class Set<TId, TPayload> : ISet<TId, TPayload>, IObserver<IDelta<TId, TPayload>>, IReadOnlyDictionary<TId, TPayload>
     {
-        private readonly ISubject<Delta<TId, TPayload>> _subscribers;
+        private readonly ISubject<IDelta<TId, TPayload>> _subscribers;
         private readonly Dictionary<TId, TPayload> _content;
         private readonly bool _disposeItemsOnDelete;
         private uint _bulkUpdateNestDepth;
@@ -22,7 +22,7 @@ namespace ReactiveSets
             _content = new Dictionary<TId, TPayload>();
             if(subscribeToSource == null)
             {
-                _subscribers = new FastSubject<Delta<TId, TPayload>>();
+                _subscribers = new FastSubject<IDelta<TId, TPayload>>();
             }
             else
             {
@@ -37,7 +37,7 @@ namespace ReactiveSets
                     });
                 };
 
-                _subscribers = new FastSubject<Delta<TId, TPayload>>(subscribeToSourceAndResetOnUnsubscribe);
+                _subscribers = new FastSubject<IDelta<TId, TPayload>>(subscribeToSourceAndResetOnUnsubscribe);
             }
         }
 
@@ -102,7 +102,7 @@ namespace ReactiveSets
             _subscribers.OnError(error);
         }
 
-        public void OnNext(Delta<TId, TPayload> value)
+        public void OnNext(IDelta<TId, TPayload> value)
         {
             switch(value.Type)
             {
@@ -124,7 +124,7 @@ namespace ReactiveSets
             }
         }
 
-        public IDisposable Subscribe(IObserver<Delta<TId, TPayload>> observer)
+        public IDisposable Subscribe(IObserver<IDelta<TId, TPayload>> observer)
         {
             observer.OnNext(Delta<TId, TPayload>.BeginBulkUpdate); 
             SendCurrentContentToSubscriber(observer);                                      
@@ -142,7 +142,7 @@ namespace ReactiveSets
 
         public int Count => _content.Count;
 
-        private void SendCurrentContentToSubscriber(IObserver<Delta<TId, TPayload>> observer)
+        private void SendCurrentContentToSubscriber(IObserver<IDelta<TId, TPayload>> observer)
         {
             for(int n = 0; n < _bulkUpdateNestDepth; n++)
                 observer.OnNext(Delta<TId, TPayload>.BeginBulkUpdate);

@@ -33,7 +33,7 @@ namespace ReactiveSets
         }
 
         public static ISet<TIdOut, TPayloadOut> Select<TIdIn, TPayloadIn, TIdOut, TPayloadOut>(
-            this IObservable<Delta<TIdIn, TPayloadIn>> source, 
+            this IObservable<IDelta<TIdIn, TPayloadIn>> source, 
             Func<TIdIn, TIdOut> idMapping, 
             Func<TIdIn, TPayloadIn, TPayloadOut> payloadMapping,
             bool disposeOnDelete = true)
@@ -42,7 +42,7 @@ namespace ReactiveSets
         }
 
         public static ISet<TIdIn, TPayloadOut> Select<TIdIn, TPayloadIn, TPayloadOut>(
-            this IObservable<Delta<TIdIn, TPayloadIn>> source, 
+            this IObservable<IDelta<TIdIn, TPayloadIn>> source, 
             Func<TIdIn, TPayloadIn, TPayloadOut> payloadMapping,
             bool disposeOnDelete = true)
         {
@@ -50,7 +50,7 @@ namespace ReactiveSets
         }
 
         public static ISet<TIdIn, TPayloadOut> Select<TIdIn, TPayloadIn, TPayloadOut>(
-            this IObservable<Delta<TIdIn, TPayloadIn>> source, 
+            this IObservable<IDelta<TIdIn, TPayloadIn>> source, 
             Func<TPayloadIn, TPayloadOut> payloadMapping,
             bool disposeOnDelete = true)
         {
@@ -58,34 +58,34 @@ namespace ReactiveSets
         }
 
         public static ISet<TIdIn, TPayloadOut> SelectDynamic<TIdIn, TPayloadIn, TPayloadOut>(
-            this IObservable<Delta<TIdIn, TPayloadIn>> source,
+            this IObservable<IDelta<TIdIn, TPayloadIn>> source,
             Func<TPayloadIn, IObservable<TPayloadOut>> payloadToObservable)
         {
             return new DynamicMapper<TIdIn, TPayloadIn, TPayloadOut>(source, payloadToObservable);
         }
 
         public static ISet<TId, TPayload> Union<TIdSet, TId,TPayload>(
-            this IObservable<Delta<TIdSet, IObservable<Delta<TId, TPayload>>>> source)
+            this IObservable<IDelta<TIdSet, IObservable<IDelta<TId, TPayload>>>> source)
         {
             return new UnionOfSets<TIdSet, TId, TPayload>(source);
         }
 
         public static ISet<TId, TPayload> Where<TId, TPayload>(
-            this IObservable<Delta<TId, TPayload>> source,
+            this IObservable<IDelta<TId, TPayload>> source,
             Func<TId, TPayload, bool> condition)
         {
             return new Subsetter<TId, TPayload>(source, condition);
         }
 
         public static ISet<TId, TPayload> Where<TId, TPayload>(
-            this IObservable<Delta<TId, TPayload>> source,
+            this IObservable<IDelta<TId, TPayload>> source,
             Predicate<TPayload> condition)
         {
             return new Subsetter<TId, TPayload>(source, (id, payload) => condition(payload));
         }
 
         public static ISet<TId, TPayload> WhereDynamic<TId, TPayload, TDynamic>(
-            this IObservable<Delta<TId, TPayload>> source,
+            this IObservable<IDelta<TId, TPayload>> source,
             Func<TPayload, IObservable<TDynamic>> payloadToObservable,
             Predicate<TDynamic> condition)
         {
@@ -93,7 +93,7 @@ namespace ReactiveSets
         }
 
         public static IValue<TPayloadOut> Aggregate<TIdIn, TPayloadIn, TPayloadOut>(
-            this IObservable<Delta<TIdIn, TPayloadIn>> source,
+            this IObservable<IDelta<TIdIn, TPayloadIn>> source,
             Func<IEnumerable<TPayloadIn>, TPayloadOut> aggregate,
             TPayloadOut initialValue = default(TPayloadOut))
         {

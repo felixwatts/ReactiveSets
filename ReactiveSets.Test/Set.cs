@@ -9,7 +9,7 @@ namespace ReactiveSets.Test
     public class Set
     {
         private ReactiveSets.Set<string, int> _subject;
-        private Mock<IObserver<Delta<string, int>>> _subscriber;
+        private Mock<IObserver<IDelta<string, int>>> _subscriber;
         private IDisposable _subscription;
 
         [Test]
@@ -116,23 +116,23 @@ namespace ReactiveSets.Test
 
         private void GivenASubscriber()
         {
-            _subscriber = new Mock<IObserver<Delta<string, int>>>();
+            _subscriber = new Mock<IObserver<IDelta<string, int>>>();
             _subscription = _subject.Subscribe(_subscriber.Object);
         }
 
         private void ThenTheSubscriberReceivesNumMessages(int count)
         {
-            _subscriber.Verify(s => s.OnNext(It.IsAny<Delta<string, int>>()), Times.Exactly(count));
+            _subscriber.Verify(s => s.OnNext(It.IsAny<IDelta<string, int>>()), Times.Exactly(count));
         }
 
         private void ThenTheSubscriberReceives(DeltaType type, int times)
         {
-            _subscriber.Verify(s => s.OnNext(It.Is<Delta<string, int>>(d => d.Type == type)), Times.Exactly(times));
+            _subscriber.Verify(s => s.OnNext(It.Is<IDelta<string, int>>(d => d.Type == type)), Times.Exactly(times));
         }
 
         private void ThenTheSubscriberReceives(DeltaType type, string id, int payload, int times)
         {
-            _subscriber.Verify(s => s.OnNext(It.Is<Delta<string, int>>(d => d.Type == type && d.Id == id && d.Payload == payload)), Times.Exactly(times));
+            _subscriber.Verify(s => s.OnNext(It.Is<IDelta<string, int>>(d => d.Type == type && d.Id == id && d.Payload == payload)), Times.Exactly(times));
         }
     }
 }

@@ -4,14 +4,14 @@ using System.Reactive.Disposables;
 
 namespace ReactiveSets
 {    
-    public abstract class SetOfSetsToSet<TIdSet, TId, TPayloadIn, TPayloadOut> : ISet<TId, TPayloadOut>, IObserver<Delta<TIdSet, IObservable<Delta<TId, TPayloadIn>>>>
+    public abstract class SetOfSetsToSet<TIdSet, TId, TPayloadIn, TPayloadOut> : ISet<TId, TPayloadOut>, IObserver<IDelta<TIdSet, IObservable<IDelta<TId, TPayloadIn>>>>
     {
         protected readonly Set<TId, TPayloadOut> _content;
-        private readonly IObservable<Delta<TIdSet, IObservable<Delta<TId, TPayloadIn>>>> _source;
+        private readonly IObservable<IDelta<TIdSet, IObservable<IDelta<TId, TPayloadIn>>>> _source;
 
         private Dictionary<TIdSet, IDisposable> _setSubscriptionBySetId;
 
-        protected SetOfSetsToSet(IObservable<Delta<TIdSet, IObservable<Delta<TId, TPayloadIn>>>> source)
+        protected SetOfSetsToSet(IObservable<IDelta<TIdSet, IObservable<IDelta<TId, TPayloadIn>>>> source)
         {
             _setSubscriptionBySetId = new Dictionary<TIdSet, IDisposable>();
             _content = new Set<TId, TPayloadOut>(SubscribeToSource);
@@ -28,7 +28,7 @@ namespace ReactiveSets
             _content.OnError(exception);
         }
 
-        public virtual void OnNext(Delta<TIdSet, IObservable<Delta<TId, TPayloadIn>>> next)
+        public virtual void OnNext(IDelta<TIdSet, IObservable<IDelta<TId, TPayloadIn>>> next)
         {
             switch(next.Type)
             {
@@ -50,7 +50,7 @@ namespace ReactiveSets
             }
         }
 
-        public IDisposable Subscribe(IObserver<Delta<TId, TPayloadOut>> observer)
+        public IDisposable Subscribe(IObserver<IDelta<TId, TPayloadOut>> observer)
         {
             return _content.Subscribe(observer);
         }
@@ -91,7 +91,7 @@ namespace ReactiveSets
             _content.OnCompleted();
         }
 
-        protected virtual void OnNext(TIdSet setId, Delta<TId, TPayloadIn> next)
+        protected virtual void OnNext(TIdSet setId, IDelta<TId, TPayloadIn> next)
         {
             switch(next.Type)
             {
@@ -127,7 +127,7 @@ namespace ReactiveSets
             _content.EndBulkUpdate();
         }
 
-        protected virtual void OnSetSet(TIdSet id, IObservable<Delta<TId, TPayloadIn>> payload)
+        protected virtual void OnSetSet(TIdSet id, IObservable<IDelta<TId, TPayloadIn>> payload)
         {
             IDisposable oldSubscription = null;
             _setSubscriptionBySetId.TryGetValue(id, out oldSubscription);

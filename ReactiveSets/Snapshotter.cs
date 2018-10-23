@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using ReactiveSets;
 
-internal class Snapshotter<TId, TPayload> : IObserver<Delta<TId, TPayload>>
+internal class Snapshotter<TId, TPayload> : IObserver<IDelta<TId, TPayload>>
 {
     private readonly Dictionary<TId, TPayload> _content;
     private readonly IDisposable _subscription;
@@ -37,7 +37,7 @@ internal class Snapshotter<TId, TPayload> : IObserver<Delta<TId, TPayload>>
         throw error;
     }
 
-    public void OnNext(Delta<TId, TPayload> delta)
+    public void OnNext(IDelta<TId, TPayload> delta)
     {
         switch(delta.Type)
         {

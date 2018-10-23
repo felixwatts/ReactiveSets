@@ -6,7 +6,7 @@ namespace ReactiveSets
     {
         private readonly Func<TId, TPayload, bool> _condition;
 
-        public Subsetter(IObservable<Delta<TId, TPayload>> source, Func<TId, TPayload, bool> condition)
+        public Subsetter(IObservable<IDelta<TId, TPayload>> source, Func<TId, TPayload, bool> condition)
             : base(source)
         {
             _condition = condition;

@@ -4,7 +4,7 @@ Reactive Sets provides a declarative way to describe relationships between sets 
 
 Whereas LINQ allows you to describe a transformation of a collection and perform that transformation once and Rx allows you to describe a transformation on a single value and have that transformation re-applied every time the value changes, Reactive Sets combines both these powers. You use a LINQ like syntax to describe a transformation of a collection and ReactiveSets ensures that the transformation is re-applied as the contents of the source collection change over time.
 
-Practically speaking, Reactive Sets is mostly a set of extension methods on the type `IObservable<Delta<TId, TPayload>>`. `Delta<TId, TPayload>` is a struct describing a mutation to a set of items (add an item, remove an item, clear etc.). As in LINQ and Rx, the extension method usually returns a similar type so chaining is possible.
+Practically speaking, Reactive Sets is mostly a set of extension methods on the type `IObservable<IDelta<TId, TPayload>>`. `IDelta<TId, TPayload>` is a struct describing a mutation to a set of items (add an item, remove an item, clear etc.). As in LINQ and Rx, the extension method usually returns a similar type so chaining is possible.
 
 Here is a small example:
 
