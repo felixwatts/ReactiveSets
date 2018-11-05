@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>ReactiveSets</id>
+    <version>0.1.0</version>
+    <title>Reactive Sets</title>
+    <authors>Felix Watts</authors>
+    <owners>Felix Watts</owners>
+    <!-- TODO <licenseUrl>http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE</licenseUrl> -->
+    <projectUrl>https://github.com/felixwatts/ReactiveSets</projectUrl>
+    <!-- TODO <iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl> -->
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>An unholy union of LINQ and Rx</description>
+    <releaseNotes>Initial release</releaseNotes>
+    <copyright>Copyright 2018</copyright>
+    <tags>fluent declarative reactive rx linq set</tags>
+    <dependencies>
+      <dependency id="System.Reactive.Interfaces" version="3.1.1" />
+      <dependency id="System.Reactive.Core" version="3.1.1" />
+      <dependency id="System.Reactive.Linq" version="3.1.1" />
+    </dependencies>
+  </metadata>  
+</package>

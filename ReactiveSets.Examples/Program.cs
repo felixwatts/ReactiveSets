@@ -9,16 +9,14 @@ namespace ReactiveSets.Examples
     {
         static void Main(string[] args)
         {
-            //Example1();
-            //Example2();
-            //Example3();
-            //Example4();
-            //Example5_Union();
-            //Example6_Union();
-            Example7_SetOperations();
+            // Example1_Aggregate();
+            // Example2_Where();
+            // Example3_Join();
+            // Example4_DynamicOperations();
+            // Example5_SetOperations();
         }
 
-        private static void Example1()
+        private static void Example1_Aggregate()
         {
             // declare a set of integers
             var source = new Set<int>(); 
@@ -44,7 +42,7 @@ namespace ReactiveSets.Examples
             // 39
         }
 
-        private static void Example2()
+        private static void Example2_Where()
         {
             // declare a set of ints keyed by string
             var source = new Set<string, int>();
@@ -65,7 +63,7 @@ namespace ReactiveSets.Examples
             source.DeleteItem("C");
         }
 
-        private static void Example3()
+        private static void Example3_Join()
         {
             // a set mapping stock ticker to current price
             var stockPrices = new Set<string, double>();
@@ -99,7 +97,7 @@ namespace ReactiveSets.Examples
             // 5000
         }
 
-        private static void Example4()
+        private static void Example4_DynamicOperations()
         {
             // a set of stock names that can change over time
             var source = new Set<string>();                                 
@@ -128,69 +126,7 @@ namespace ReactiveSets.Examples
             Console.Read();
         }
 
-        private static void Example5_Union()
-        {
-            var technologyStocks = new Set<string, Stock>
-            {
-                { "GOOG", new Stock("GOOG") }
-            };
-
-            var energyStocks = new Set<string, Stock>
-            {
-                { "EOG", new Stock("EOG") },
-                { "XOM", new Stock("XOM") }
-            };
-
-            // my portfolio is the union of my technology stocks and my energy stock
-            var myPortfolio = new[] { technologyStocks, energyStocks }.Union();
-
-            // print a live summary of my portfolio ot the console
-            myPortfolio
-                .SelectDynamic((_, s) => s.Price.Select(p => $"{s.Name}:{p:f2}"))
-                .Aggregate(ns => string.Join(Environment.NewLine, ns.OrderBy(n => n))) 
-                .Subscribe(str =>                                           
-                {
-                    Console.Clear();
-                    Console.SetCursorPosition(0, 0);
-                    Console.WriteLine(str);
-                });
-
-            Console.Read();
-
-            // modifications the the sources of the union are automatically handled
-            energyStocks.DeleteItem("XOM");
-            energyStocks.SetItem("PEGI", new Stock("PEGI"));
-
-            Console.Read();
-        }
-
-        private static void Example6_Union()
-        {
-            var reactors = new Set<string, Reactor>();
-
-            // print a live summary of my portfolio ot the console
-            reactors
-                .Union()
-                .Aggregate(ns => string.Join(Environment.NewLine, ns.OrderBy(n => n))) 
-                .Subscribe(str =>                                           
-                {
-                    Console.Clear();
-                    Console.SetCursorPosition(0, 0);
-                    Console.WriteLine(str);
-                });
-
-            reactors.SetItem("REACTOR1", new Reactor("REACTOR1"));
-            reactors.SetItem("REACTOR2", new Reactor("REACTOR2"));
-
-            Console.Read();
-
-            reactors.DeleteItem("REACTOR1");
-            reactors.SetItem("REACTOR3", new Reactor("REACTOR3"));
-
-            Console.Read();
-        }
-
-        public static void Example7_SetOperations()
+        public static void Example5_SetOperations()
         {
             // create some sets defining class membership for some types of animal
             var africanSpecies = new Set<string, string>() { "Giraffe", "Crocodile", "Scorpion" };
@@ -259,55 +195,4 @@ namespace ReactiveSets.Examples
             // Since the ReactiveSets is not thread safe, its important to avoid concurrent updates
             .ObserveOn(new SequentialScheduler());
     }
-
-    public class Reactor : ISet<string, string>
-    {
-        private static string[] StatusReports = new[]
-        {
-            "Elevated gamma radiation detected in sector 4",
-            "Backup generators are under water",
-            "Reactor pressure is crazy high right now"
-        };
-
-        private readonly Set<string, string> _statusReports;
-        private readonly string _name;
-        private readonly IDisposable _tickerSubscription;
-
-        public Reactor(string name)
-        {
-            _name = name;
-            _statusReports = new Set<string, string>();
-            _tickerSubscription = _ticker.Subscribe(RefreshStatusReports);
-        }
-
-        public IDisposable Subscribe(IObserver<IDelta<string, string>> observer)
-        {
-            return _statusReports.Subscribe(observer);
-        }
-
-        private void RefreshStatusReports(long _)
-        {            
-            _statusReports.Clear();
-
-            while(true)
-            {
-                var i = _dice.Next(StatusReports.Length+1);
-                if(i < StatusReports.Length)
-                {
-                    _statusReports.SetItem($"{_name}: {StatusReports[i]}");
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
-
-        private static IObservable<long> _ticker = Observable
-            .Interval(TimeSpan.FromSeconds(2))
-            // Since the ReactiveSets is not thread safe, its important to avoid concurrent updates
-            .ObserveOn(new SequentialScheduler());
-
-        private static Random _dice = new Random();
-    } 
 }
