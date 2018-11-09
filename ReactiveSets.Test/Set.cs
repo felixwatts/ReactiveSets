@@ -6,6 +6,7 @@ using System.Reactive.Disposables;
 
 namespace ReactiveSets.Test
 {
+
     [TestFixture]
     public class Set
     {

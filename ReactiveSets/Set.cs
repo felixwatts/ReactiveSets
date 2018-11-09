@@ -30,7 +30,9 @@ namespace ReactiveSets
                     return Disposable.Create(() =>
                     {
                         sub.Dispose();
+                        var toDispose = GetAllAsDisposable();
                         _content.Clear();
+                        toDispose.DisposeAll();
                         _bulkUpdateNestDepth = 0;
                     });
                 });

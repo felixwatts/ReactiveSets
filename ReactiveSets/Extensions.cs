@@ -172,6 +172,13 @@ namespace ReactiveSets
             return new Joiner<TId, TPayloadLeft, TPayloadRight, TPayloadOut>(left, right, join, disposeItemsOnDelete);
         }
 
+        public static ISet<int, TPayload> Sort<TId, TPayload>(
+            this ISet<TId, TPayload> source,
+            Func<TPayload, TPayload, int> comparison)
+        {
+            return new Sorter<TId, TPayload>(source, comparison);
+        }
+
         public static TValue FindOrAdd<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, Func<TValue> valueFactory)
         {
             TValue val;
