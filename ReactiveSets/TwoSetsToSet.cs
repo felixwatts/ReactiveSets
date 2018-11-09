@@ -25,6 +25,11 @@ namespace ReactiveSets
             return _content.Subscribe(observer);
         }
 
+        public IDisposable Subscribe(TIdOut id, IObserver<IDelta<TIdOut, TPayloadOut>> subscriber)
+        {
+            return _content.Subscribe(id, subscriber);
+        }
+
         private IDisposable SubscribeToSources()
         {
             var subLeft = _left.Subscribe(OnNextLeft, OnError, OnCompleted);

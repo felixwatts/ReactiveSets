@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Disposables;
+using ReactiveSets;
 
 namespace ReactiveSets
 {    
@@ -12,6 +13,11 @@ namespace ReactiveSets
         private HashSet<IObserver<T>> _subscribersMap;
         private IObserver<T>[] _publishTo;
         private readonly ReferenceCounter _activator;
+
+        public FastSubject(ReferenceCounter activator)
+        {
+            _activator = activator;
+        }
 
         public FastSubject(Func<IDisposable> activate = null)
         {
@@ -23,6 +29,8 @@ namespace ReactiveSets
 
         public void OnCompleted()
         {
+            ThrowIfNotActive();
+
             foreach(var s in GetSubscribers())
             {
                 s.OnCompleted();
@@ -32,6 +40,8 @@ namespace ReactiveSets
 
         public void OnError(Exception error)
         {
+            ThrowIfNotActive();
+
             foreach(var s in GetSubscribers())
             {
                 s.OnError(error);
@@ -40,11 +50,13 @@ namespace ReactiveSets
 
         public virtual void OnNext(T value)
         {
+            ThrowIfNotActive();
+            
             foreach(var s in GetSubscribers())
             {
                 s.OnNext(value);
             }
-        }
+        }        
 
         public virtual IDisposable Subscribe(IObserver<T> observer)
         {            
@@ -104,6 +116,12 @@ namespace ReactiveSets
             }
 
             return _publishTo;
+        }
+
+        private void ThrowIfNotActive()
+        {
+            if(_activator == null) return;
+            if(!_activator.IsActive) throw new InvalidOperationException("When an activator is used it is invalid to publish when there are no subscribers");
         }
     }
 }

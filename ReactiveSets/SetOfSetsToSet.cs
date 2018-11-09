@@ -55,6 +55,11 @@ namespace ReactiveSets
             return _content.Subscribe(observer);
         }
 
+        public IDisposable Subscribe(TId id, IObserver<IDelta<TId, TPayloadOut>> subscriber)
+        {
+            return _content.Subscribe(id, subscriber);
+        }
+
         protected virtual void OnBeginBulkUpdateSets()
         {
             _content.BeginBulkUpdate();

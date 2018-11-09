@@ -13,17 +13,11 @@ namespace ReactiveSets.Test
     public class FastSubject
     {
         private ReactiveSets.FastSubject<int> _subject;
-        private int _activationLevel;
 
         [SetUp]
         public void SetUp()
         {
-            _activationLevel = 0;
-            _subject = new ReactiveSets.FastSubject<int>(() =>
-            {
-                _activationLevel ++;
-                return Disposable.Create(() => _activationLevel--);
-            });
+            _subject = new ReactiveSets.FastSubject<int>();
         }
 
         [TestCase(1)]
@@ -68,6 +62,13 @@ namespace ReactiveSets.Test
         [TestCase(2, 2, 0)]
         public void IsActivatedAsLongAsThereIsAtLeastOneSubscriber(int numSubscribers, int numUnsubscribers, int expectedActivationLevel)
         {
+            var activationLevel = 0;
+            _subject = new ReactiveSets.FastSubject<int>(() =>
+            {
+                activationLevel ++;
+                return Disposable.Create(() => activationLevel--);
+            });
+
             var mockObserver = new Mock<IObserver<int>>();
             var subscriptions = Enumerable
                 .Range(0, numSubscribers)
@@ -76,7 +77,7 @@ namespace ReactiveSets.Test
 
             subscriptions.Take(numUnsubscribers).DisposeAll();
 
-            Assert.AreEqual(expectedActivationLevel, _activationLevel);
+            Assert.AreEqual(expectedActivationLevel, activationLevel);
         }
     }
 }

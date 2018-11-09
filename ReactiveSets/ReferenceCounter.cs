@@ -17,6 +17,8 @@ namespace ReactiveSets
             _activate = activate;
         }
 
+        public bool IsActive => _referenceCount > 0;
+
         public void IncrementReferenceCount()
         {
             _referenceCount++;

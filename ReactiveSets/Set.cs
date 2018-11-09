@@ -11,22 +11,20 @@ namespace ReactiveSets
 
     public class Set<TId, TPayload> : ISet<TId, TPayload>, IObserver<IDelta<TId, TPayload>>, IReadOnlyDictionary<TId, TPayload>
     {
+        private readonly ReferenceCounter _activator;
         private readonly ISubject<IDelta<TId, TPayload>> _subscribers;
+        private Dictionary<TId, ISubject<IDelta<TId, TPayload>>> _subscribersById;
         private readonly Dictionary<TId, TPayload> _content;
         private readonly bool _disposeItemsOnDelete;
-        private uint _bulkUpdateNestDepth;
+        private uint _bulkUpdateNestDepth;        
 
         public Set(Func<IDisposable> subscribeToSource = null, bool disposeItemsOnDelete = false)
         {
             _disposeItemsOnDelete = disposeItemsOnDelete;
             _content = new Dictionary<TId, TPayload>();
-            if(subscribeToSource == null)
-            {
-                _subscribers = new FastSubject<IDelta<TId, TPayload>>();
-            }
-            else
-            {
-                Func<IDisposable> subscribeToSourceAndResetOnUnsubscribe = () =>
+            _activator = subscribeToSource == null
+                ? null
+                : new ReferenceCounter(() =>
                 {
                     var sub = subscribeToSource();
                     return Disposable.Create(() =>
@@ -35,10 +33,8 @@ namespace ReactiveSets
                         _content.Clear();
                         _bulkUpdateNestDepth = 0;
                     });
-                };
-
-                _subscribers = new FastSubject<IDelta<TId, TPayload>>(subscribeToSourceAndResetOnUnsubscribe);
-            }
+                });
+            _subscribers = new FastSubject<IDelta<TId, TPayload>>(_activator);
         }
 
         public TPayload this[TId id]
@@ -52,7 +48,7 @@ namespace ReactiveSets
 
             _content[id] = payload;
             var delta = Delta<TId, TPayload>.SetItem(id, payload);
-            _subscribers.OnNext(delta);
+            Publish(delta);
 
             toDispose?.Dispose();
         }
@@ -65,7 +61,7 @@ namespace ReactiveSets
 
             _content.Remove(id);
             var delta = Delta<TId, TPayload>.DeleteItem(id);
-            _subscribers.OnNext(delta);
+            Publish(delta);
 
             toDispose?.Dispose();
         }
@@ -73,7 +69,7 @@ namespace ReactiveSets
         public void BeginBulkUpdate()
         {
             _bulkUpdateNestDepth++;
-            _subscribers.OnNext(Delta<TId, TPayload>.BeginBulkUpdate);
+            Publish(Delta<TId, TPayload>.BeginBulkUpdate);
         }
 
         public void EndBulkUpdate()
@@ -81,14 +77,14 @@ namespace ReactiveSets
             if(_bulkUpdateNestDepth == 0) throw new InvalidOperationException("Bulk update nest depth < 0");
 
             _bulkUpdateNestDepth--;
-            _subscribers.OnNext(Delta<TId, TPayload>.EndBulkUpdate);
+            Publish(Delta<TId, TPayload>.EndBulkUpdate);
         }
 
         public void Clear()
         {
             var toDispose = GetAllAsDisposable();
             _content.Clear();
-            _subscribers.OnNext(Delta<TId, TPayload>.Clear);
+            Publish(Delta<TId, TPayload>.Clear);
             toDispose?.DisposeAll();
         }        
 
@@ -124,6 +120,26 @@ namespace ReactiveSets
             }
         }
 
+        public IDisposable Subscribe(TId id, IObserver<IDelta<TId, TPayload>> subscriber)
+        {
+            if(_subscribersById == null)
+            {
+                _subscribersById = new Dictionary<TId, ISubject<IDelta<TId, TPayload>>>();
+            }
+
+            if(!_subscribersById.TryGetValue(id, out var subject))
+            {
+                subject = new FastSubject<IDelta<TId, TPayload>>(_activator);
+                _subscribersById[id] = subject;
+            }
+
+            subscriber.OnNext(Delta<TId, TPayload>.BeginBulkUpdate); 
+            SendCurrentContentToSubscriber(id, subscriber);                                      
+            var sub = subject.Subscribe(subscriber);                    
+            subscriber.OnNext(Delta<TId, TPayload>.EndBulkUpdate);
+            return sub;
+        }
+
         public IDisposable Subscribe(IObserver<IDelta<TId, TPayload>> observer)
         {
             observer.OnNext(Delta<TId, TPayload>.BeginBulkUpdate); 
@@ -150,6 +166,18 @@ namespace ReactiveSets
             foreach(var kvp in _content)
             {
                 var delta = Delta<TId, TPayload>.SetItem(kvp.Key, kvp.Value);
+                observer.OnNext(delta);
+            }
+        }
+
+        private void SendCurrentContentToSubscriber(TId id, IObserver<IDelta<TId, TPayload>> observer)
+        {
+            for(int n = 0; n < _bulkUpdateNestDepth; n++)
+                observer.OnNext(Delta<TId, TPayload>.BeginBulkUpdate);
+
+            if(_content.TryGetValue(id, out var val))
+            {
+                var delta = Delta<TId, TPayload>.SetItem(id, val);
                 observer.OnNext(delta);
             }
         }
@@ -196,5 +224,33 @@ namespace ReactiveSets
 
             return _content.Values.OfType<IDisposable>().ToArray();
         } 
+
+        private void Publish(IDelta<TId, TPayload> delta)
+        {
+            _subscribers.OnNext(delta);
+
+            if(_subscribersById == null) return;
+
+            switch(delta.Type)
+            {
+                case DeltaType.SetItem:
+                case DeltaType.DeleteItem:
+                {
+                    if(_subscribersById.TryGetValue(delta.Id, out var subject))
+                    {
+                        subject.OnNext(delta);
+                    }
+                    break;
+                }
+                default:
+                {
+                    foreach(var subject in _subscribersById.Values)
+                    {
+                        subject.OnNext(delta);
+                    }
+                    break;
+                }
+            }
+        }
     }
 }

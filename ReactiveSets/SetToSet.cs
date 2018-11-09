@@ -20,6 +20,11 @@ namespace ReactiveSets
             return _content.Subscribe(observer);
         }
 
+        public IDisposable Subscribe(TIdOut id, IObserver<IDelta<TIdOut, TPayloadOut>> subscriber)
+        {
+            return _content.Subscribe(id, subscriber);
+        }
+
         public virtual void OnCompleted()
         {
             _content.OnCompleted();
@@ -79,6 +84,6 @@ namespace ReactiveSets
                 sub.Dispose();
                 Reset();
             });
-        }      
+        }
     } 
 }
